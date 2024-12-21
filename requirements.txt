@@ -1,0 +1,51 @@
+1. Trang chủ (Home Page):
+    Hiển thị danh sách các sản phẩm nổi bật hoặc mới nhất.
+    Mỗi sản phẩm sẽ có tên, ảnh, giá và một nút "Thêm vào giỏ" để người dùng có thể thêm sản phẩm vào giỏ hàng.
+    Thanh điều hướng với các mục: Trang chủ, Sản phẩm, Giỏ hàng, Đăng nhập, Đăng ký
+    
+2. Trang sản phẩm (Product Page):
+    Hiển thị danh sách tất cả các sản phẩm có trong cửa hàng.
+    Cho phép người dùng lọc sản phẩm theo loại (ví dụ: quần áo, giày dép, đồ điện tử).
+    Mỗi sản phẩm sẽ có thông tin chi tiết như tên, giá, mô tả ngắn và ảnh.
+    Nút "Thêm vào giỏ" cho phép người dùng thêm sản phẩm vào giỏ hàng.
+
+3. Chi tiết sản phẩm (Product Detail Page):
+    Hiển thị thông tin chi tiết của sản phẩm khi người dùng click vào một sản phẩm cụ thể từ danh sách.
+    Bao gồm các thông tin: tên sản phẩm, mô tả chi tiết, giá, ảnh sản phẩm và nút "Thêm vào giỏ".
+    
+4. Giỏ hàng (Cart Page):
+    Hiển thị tất cả các sản phẩm người dùng đã thêm vào giỏ.
+    Hiển thị thông tin chi tiết cho mỗi sản phẩm trong giỏ như tên, số lượng, giá, tổng giá trị sản phẩm.
+    Cho phép người dùng thay đổi số lượng sản phẩm hoặc xóa sản phẩm khỏi giỏ hàng.
+    Hiển thị tổng giá trị đơn hàng và nút "Tiến hành thanh toán".
+
+5. Đăng nhập/Đăng ký (Login/Signup):
+    Người dùng có thể đăng ký tài khoản mới (bao gồm các trường như tên, email, mật khẩu).
+    Người dùng có thể đăng nhập vào tài khoản bằng email và mật khẩu.
+    Khi đăng nhập thành công, người dùng sẽ được chuyển hướng về trang chủ hoặc giỏ hàng.
+    Nếu người dùng đã đăng nhập, hệ thống sẽ hiển thị tên người dùng và cho phép đăng xuất.
+
+6. Thanh toán (Checkout):
+    Sau khi người dùng hoàn tất giỏ hàng, họ có thể tiến hành thanh toán.
+    Cung cấp các trường như địa chỉ giao hàng, phương thức thanh toán (ví dụ: thẻ tín dụng, chuyển khoản ngân hàng).
+    Hiển thị thông tin đơn hàng và yêu cầu xác nhận thanh toán.
+    Sau khi thanh toán, hệ thống sẽ gửi email xác nhận và hiển thị thông báo "Đơn hàng của bạn đã được xác nhận".
+
+7. Quản lý người dùng (Admin Panel):
+    Quản trị viên có thể đăng nhập vào hệ thống và quản lý các sản phẩm (thêm, sửa, xóa).
+    Quản trị viên có thể xem danh sách các đơn hàng và thông tin người dùng.
+    Công nghệ và công cụ yêu cầu:
+
+Các tính năng bổ sung:
+    Xác nhận email khi người dùng đăng ký tài khoản hoặc khi đơn hàng được tạo.
+    Tính năng tìm kiếm sản phẩm.
+    Phân trang cho danh sách sản phẩm.
+    Yêu cầu kỹ thuật và báo cáo:
+Báo cáo:
+    Mô tả chi tiết cách triển khai các chức năng.
+    Hướng dẫn cách chạy ứng dụng trên máy của người dùng.
+    Mô tả cách sử dụng cơ sở dữ liệu và cấu trúc của các bảng.
+    Cách triển khai bảo mật cho hệ thống (đăng nhập, mật khẩu, v.v.).
+Yêu cầu khác:
+    Đảm bảo giao diện người dùng dễ sử dụng, thân thiện với người dùng (UI/UX).
+    Đảm bảo hệ thống hoạt động ổn định và không có lỗi lớn.
