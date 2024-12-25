@@ -287,13 +287,6 @@ VALUES
 ('Ngân Lê', 'adminB', '123456', 'manager'),
 ('Hải Mi', 'adminC', '123456', 'staff');
 
--- Thêm vào bảng Orders
-INSERT INTO Orders (orders_date, cus_id, orders_status, orders_total)
-VALUES 
-(GETDATE(), 1, 'pending', 10000000),  -- Đơn hàng cho khách hàng có cus_id = 1
-(GETDATE(), 2, 'shipped', 20000000),  -- Đơn hàng cho khách hàng có cus_id = 2
-(GETDATE(), 3, 'completed', 15000000); -- Đơn hàng cho khách hàng có cus_id = 3
-
 -- Thêm vào bảng Coupon
 INSERT INTO Coupon (coupon_code, discount_type, discount_value, min_order_value, start_date, end_date, status, customer_group)
 VALUES 
