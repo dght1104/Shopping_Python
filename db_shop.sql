@@ -86,12 +86,20 @@ CREATE TABLE OrderCoupons (
     FOREIGN KEY (coupon_id) REFERENCES Coupon(coupon_id)
 );
  
+-- Bảng lưu vai trò của Admin
+CREATE TABLE roleAdmins (
+    role_id INT PRIMARY KEY IDENTITY,  -- Tự động tăng
+    role_name VARCHAR(50) UNIQUE NOT NULL 
+);
+
+-- Bảng Admins
 CREATE TABLE Admins (
     admin_id INT PRIMARY KEY IDENTITY,  -- Tạo khóa chính tự động tăng
-    admin_name VARCHAR(256) NOT NULL,    -- Tên quản trị viên
+    admin_name VARCHAR(256) NOT NULL,   -- Tên quản trị viên
     admin_username VARCHAR(50) UNIQUE NOT NULL,  -- Tên đăng nhập quản trị viên
-    admin_password CHAR(64) NOT NULL,    -- Mật khẩu đã băm
-    role VARCHAR(50) CHECK (role IN ( 'manager', 'staff')) DEFAULT 'staff' -- Vai trò quản trị viên
+    admin_password CHAR(64) NOT NULL,   -- Mật khẩu đã băm
+    role_id INT,                        -- Khóa ngoại liên kết với vai trò
+    FOREIGN KEY (role_id) REFERENCES roleAdmins(role_id) -- Ràng buộc khóa ngoại
 );
 
 CREATE TABLE ProductImages (
@@ -185,7 +193,7 @@ BEGIN
     SELECT cus_name, cus_email, cus_phone, cus_username, @hashed_password
     FROM INSERTED;
 END;
-
+go
 CREATE TRIGGER trg_InsteadOfInsertAdmin
 ON Admins
 INSTEAD OF INSERT
@@ -201,11 +209,11 @@ BEGIN
     SET @hashed_password = CONVERT(CHAR(64), HASHBYTES('SHA2_256', CONVERT(NVARCHAR(50), @password)), 2);
 
     -- Chèn dữ liệu vào bảng Admins, thay mật khẩu bằng mật khẩu đã băm
-    INSERT INTO Admins (admin_name, admin_username, admin_password, role)
-    SELECT admin_name, admin_username, @hashed_password, role
+    INSERT INTO Admins (admin_name, admin_username, admin_password, role_id)  -- Chú ý sử dụng 'role_id' thay vì 'role'
+    SELECT admin_name, admin_username, @hashed_password, role_id  -- 'role_id' thay vì 'role'
     FROM INSERTED;
 END;
-
+go
 CREATE TRIGGER trg_UpdateTotalSpent
 ON Orders
 AFTER INSERT
@@ -281,11 +289,17 @@ VALUES
 ('Điện thoại Samsung Galaxy S24 Ultra 5G', 200, 20, 25000000, 0.00, 1, 4, 'Fresh bananas sourced from local farms'),
 ('Cáp Type C 1m Xmobile TC27-1000', 150, 40, 100000, 0, 4, 1, 'Comfortable cotton t-shirt available in multiple colors');
 
-INSERT INTO Admins (admin_name, admin_username, admin_password, role)
+INSERT INTO roleAdmins (role_name) 
+VALUES 
+('Administrator'), 
+('Manager'), 
+('Admin');
+
+INSERT INTO Admins (admin_name, admin_username, admin_password, role_id)
 VALUES
-('Gia Hân', 'adminA', '123456', 'manager'),
-('Ngân Lê', 'adminB', '123456', 'manager'),
-('Hải Mi', 'adminC', '123456', 'staff');
+('Gia Hân', 'adminA', '123456', 1),
+('Ngân Lê', 'adminB', '123456', 3),
+('Hải Mi', 'adminC', '123456', 2);
 
 -- Thêm vào bảng Coupon
 INSERT INTO Coupon (coupon_code, discount_type, discount_value, min_order_value, start_date, end_date, status, customer_group)
