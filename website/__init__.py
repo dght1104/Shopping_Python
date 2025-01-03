@@ -2,14 +2,14 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import pyodbc
 from os import path
-
+from flask_login import LoginManager
 db = SQLAlchemy()
 # Thông tin cấu hình kết nối
 server = 'DGHT1104'  # Tên server
-database = 'db'  # Tên cơ sở dữ liệu
+database = 'db_shop'  # Tên cơ sở dữ liệu
 driver = 'ODBC Driver 17 for SQL Server'
 
-DB_NAME='db_shop.db'
+DB_NAME='db_shop'
 
 def create_app():
     app = Flask(__name__)
@@ -26,6 +26,13 @@ def create_app():
     from .models import Customer
     create_database(app)
 
+    login_manager=LoginManager()
+    login_manager.login_view= 'auth.login'
+    login_manager.init_app(app)
+    
+    @login_manager.user_loader
+    def loader_user(cus_id):
+        return Customer.query.get(int(cus_id))
 
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')

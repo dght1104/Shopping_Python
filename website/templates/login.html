@@ -22,8 +22,12 @@
                 name="password"
                 placeholder="Enter password"/>
             </div>
-    <br/>
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
+        {% if register_message %}
+            <div class="">
+                {{ register_message|safe }}
+            </div>
+        {% endif %}
+        <button align="center" type="submit" class="btn btn-primary">Login</button>
+    </form>
 
 {% endblock %}
