@@ -8,6 +8,7 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login',methods=["POST","GET"])
 def login():
+    user = None
     if request.method == "POST":
         user_name = request.form.get('user_name')
         password = request.form.get('password')
@@ -29,9 +30,7 @@ def login():
             flash("Tên đăng nhập không tồn tại", category='error')
     signup_url = url_for('auth.signup')
     register_message = f'Bạn chưa có tài khoản, hãy <a href="{signup_url}">đăng ký ngay</a>!'
-    return render_template('login.html', register_message=register_message)
-    
-
+    return render_template('login.html',user=user, register_message=register_message)
     
 @auth.route('/logout')
 @login_required
