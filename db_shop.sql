@@ -45,6 +45,10 @@ create table Orders(
 	orders_status VARCHAR(20) CHECK (orders_status IN ('pending', 'shipped', 'completed','cancelled')),
 	orders_total DECIMAL(10, 2) DEFAULT 0,
 	shipping_fee DECIMAL(10, 2) DEFAULT 0,
+    coupon_code VARCHAR(50) DEFAULT NULL,
+    couponship_code VARCHAR(50) DEFAULT NULL,
+    FOREIGN KEY (coupon_code) REFERENCES Coupon(coupon_code),
+    FOREIGN KEY (couponship_code) REFERENCES Coupon_Ship(couponship_code),
 	FOREIGN KEY (cus_id) REFERENCES Customer(cus_id)
 );
 
@@ -58,8 +62,7 @@ CREATE TABLE OrderDetails (
 );
 
 CREATE TABLE Coupon (
-    coupon_id INT PRIMARY KEY IDENTITY,           -- Sử dụng IDENTITY để tự động tăng giá trị
-    coupon_code VARCHAR(50) NOT NULL,             -- Mã giảm giá
+    coupon_code VARCHAR(50) PRIMARY KEY NOT NULL,             -- Mã giảm giá
     discount_type VARCHAR(10) NOT NULL,           -- Thay thế ENUM bằng VARCHAR
     discount_value DECIMAL(10, 2) NOT NULL,       -- Giá trị giảm giá
     min_order_value DECIMAL(10, 2),               -- Giá trị đơn hàng tối thiểu
@@ -76,14 +79,33 @@ CREATE TABLE Coupon (
     CONSTRAINT chk_min_order_value CHECK (min_order_value >= 0)
 );
 
-CREATE TABLE OrderCoupons (
-    order_coupon_id INT PRIMARY KEY IDENTITY,
-    orders_id CHAR(10),
-    coupon_id INT,
-    discount_value DECIMAL(10, 2),  -- Giá trị giảm giá sau khi áp dụng coupon
-    FOREIGN KEY (orders_id) REFERENCES Orders(orders_id),
-    FOREIGN KEY (coupon_id) REFERENCES Coupon(coupon_id)
+CREATE TABLE Coupon_Ship (          -- Sử dụng IDENTITY để tự động tăng giá trị
+    couponship_code VARCHAR(50) PRIMARY KEY NOT NULL,             -- Mã giảm giá
+    discount_type VARCHAR(10) NOT NULL,           -- Thay thế ENUM bằng VARCHAR
+    discount_value DECIMAL(10, 2) NOT NULL,       -- Giá trị giảm giá
+    min_order_value DECIMAL(10, 2),               -- Giá trị đơn hàng tối thiểu
+    start_date DATE NOT NULL,                     -- Ngày bắt đầu
+    end_date DATE NOT NULL,                       -- Ngày kết thúc
+    usage_limit INT DEFAULT NULL,                 -- Số lần sử dụng tối đa
+    used_count INT DEFAULT 0,                     -- Số lần đã sử dụng
+    status VARCHAR(10) NOT NULL DEFAULT 'active', -- Trạng thái, thay ENUM bằng VARCHAR
+    customer_group VARCHAR(50),                   -- Nhóm khách hàng
+    -- Ràng buộc CHECK để giới hạn giá trị hợp lệ cho discount_type và status
+    CONSTRAINT chk_discount_type CHECK (discount_type IN ('percentage', 'fixed')),
+    CONSTRAINT chk_status CHECK (status IN ('active', 'inactive')),
+	CONSTRAINT chk_discount_value CHECK (discount_value >= 0),
+    CONSTRAINT chk_min_order_value CHECK (min_order_value >= 0)
 );
+
+-- CREATE TABLE OrderCoupons (
+--     order_coupon_id INT PRIMARY KEY IDENTITY,
+--     orders_id CHAR(10),
+--     coupon_code VARCHAR(50),
+--     couponship_code VARCHAR(50),
+--     FOREIGN KEY (orders_id) REFERENCES Orders(orders_id),
+--     FOREIGN KEY (coupon_code) REFERENCES Coupon(coupon_code),
+--     FOREIGN KEY (couponship_code) REFERENCES Coupon_Ship(coupon_code)
+-- );
  
 -- Bảng lưu vai trò của Admin
 CREATE TABLE roleAdmins (
@@ -118,35 +140,35 @@ CREATE TABLE CustomerGroups (
 
 go 
 
-CREATE TRIGGER UpdateOrdersTotalOnCouponChange
-ON OrderCoupons
-AFTER INSERT, UPDATE, DELETE
-AS
-BEGIN
-    SET NOCOUNT ON;
+-- CREATE TRIGGER UpdateOrdersTotalOnCouponChange
+-- ON OrderCoupons
+-- AFTER INSERT, UPDATE, DELETE
+-- AS
+-- BEGIN
+--     SET NOCOUNT ON;
 
-    -- Lấy danh sách các orders_id bị ảnh hưởng
-    DECLARE @UpdatedOrders TABLE (orders_id CHAR(10));
-    INSERT INTO @UpdatedOrders (orders_id)
-    SELECT DISTINCT orders_id
-    FROM 
-        INSERTED
-        UNION
-        SELECT DISTINCT orders_id
-        FROM DELETED;
+--     -- Lấy danh sách các orders_id bị ảnh hưởng
+--     DECLARE @UpdatedOrders TABLE (orders_id CHAR(10));
+--     INSERT INTO @UpdatedOrders (orders_id)
+--     SELECT DISTINCT orders_id
+--     FROM 
+--         INSERTED
+--         UNION
+--         SELECT DISTINCT orders_id
+--         FROM DELETED;
 
-    -- Cập nhật lại orders_total cho các đơn hàng bị ảnh hưởng
-    UPDATE Orders
-    SET orders_total = (
-        SELECT o.orders_total - COALESCE(SUM(OC.discount_value), 0)
-        FROM OrderCoupons OC
-        WHERE OC.orders_id = o.orders_id
-    )
-    FROM Orders o
-    WHERE o.orders_id IN (SELECT orders_id FROM @UpdatedOrders);
-END;
+--     -- Cập nhật lại orders_total cho các đơn hàng bị ảnh hưởng
+--     UPDATE Orders
+--     SET orders_total = (
+--         SELECT o.orders_total - COALESCE(SUM(OC.discount_value), 0)
+--         FROM OrderCoupons OC
+--         WHERE OC.orders_id = o.orders_id
+--     )
+--     FROM Orders o
+--     WHERE o.orders_id IN (SELECT orders_id FROM @UpdatedOrders);
+-- END;
+
 GO
-
 CREATE TRIGGER UpdateOrdersTotal
 ON Orders
 AFTER INSERT, UPDATE
@@ -162,15 +184,18 @@ BEGIN
         FROM OrderDetails OD
         WHERE OD.orders_id = Orders.orders_id
     ) - COALESCE((
-        -- Trừ đi tổng giá trị giảm giá từ coupon
-        SELECT SUM(OC.discount_value)
-        FROM OrderCoupons OC
-        WHERE OC.orders_id = Orders.orders_id
+        SELECT C.discount_value
+        FROM Coupon C
+        WHERE C.coupon_code=Orders.coupon_code
+    ), 0) - COALESCE((
+        SELECT CS.discount_value
+        FROM Coupon_Ship CS
+        WHERE CS.couponship_code=Orders.couponship_code
     ), 0)
     WHERE orders_id IN (SELECT orders_id FROM INSERTED);
 END;
-go
 
+go
 CREATE TRIGGER trg_InsteadOfInsertCustomer
 ON Customer
 INSTEAD OF INSERT

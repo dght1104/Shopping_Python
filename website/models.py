@@ -55,6 +55,8 @@ class Orders(db.Model,UserMixin):
     orders_status = db.Column(Enum('pending', 'shipped', 'completed', 'cancelled', name='order_status_enum'))
     orders_total = db.Column(db.Numeric(10,2), default = 0)
     shipping_fee = db.Column(db.Numeric(10,2), default = 0)
+    coupon_code=  db.Column(db.String(10), default = NULL)
+    couponship_code =db.Column(db.String(10), default = NULL)
     def get_id(self):
         return str(self.orders_id)
      # Mối quan hệ nhiều-nhiều với Products thông qua bảng phụ
@@ -72,11 +74,10 @@ class OrderDetails(db.Model,UserMixin):
     
 class Coupon(db.Model,UserMixin ):
     __tablename__='Coupon'
-    coupon_id = db.Column(db.Integer, primary_key = True,  autoincrement=True) # Sử dụng IDENTITY để tự động tăng giá trị
-    coupon_code = db.Column(db.VARCHAR(50),  nullable=False)                    # Mã giảm giá
-    discount_type = db.Column(db.Enum('percentage', 'fixed', name='discount_type_enum'), nullable=False)ay thế ENUM bằng VARCHAR
-    discount_value = db.Column(db.Numberic(10,2),  nullable=False)      #Giá trị giảm giá
-    min_order_value =db.Column(db.Numberic(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
+    coupon_code = db.Column(db.VARCHAR(50),unique=True,  primary_key = True,  nullable=False)                    # Mã giảm giá
+    discount_type = db.Column(db.Enum('percentage', 'fixed', name='discount_type_enum'), nullable=False)
+    discount_value = db.Column(db.Numeric(10,2),  nullable=False)      #Giá trị giảm giá
+    min_order_value =db.Column(db.Numbric(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
     start_date = db.Column(Date,nullable=False)              #Ngày bắt đầu
     end_date = db.Column(Date,nullable=False) #                     -- Ngày kết thúc
     usage_limit = db.Column(db.Integer)             # Số lần sử dụng tối đa
@@ -90,19 +91,26 @@ class Coupon(db.Model,UserMixin ):
     )
     def get_id(self):
         return str(self.coupon_id)
-    coupon_order = db.relationship('Orders',  backref='order_coupon', lazy=True)
-class OrderCoupons(db.Model, UserMixin):
-    __tablename__='OrderCoupons'
-    order_coupon_id =db.Column(db.Integer, primary_key = True,  autoincrement=True) 
-    orders_id = db.Column(db.String(10), db.ForeignKey('Orders.orders_id'))
-    coupon_id=db.Column(db.Integer,  db.ForeignKey('Coupon.coupon_id'))
-    discount_value=db.Column(db.Numeric(10,2)) #-- Giá trị giảm giá sau khi áp dụng coupon
-    def get_id(self):
-        return str(self.supply_id)
-    
-    coupon_ord = db.relationship('Orders', backref='products', lazy=True) 
-    coupon_ord = db.relationship('Coupon', backref='products', lazy=True) 
 
+class Coupon_Ship(db.Model,UserMixin ):
+    __tablename__='Coupon_Ship'
+    couponship_code = db.Column(db.VARCHAR(50),unique=True,  primary_key = True,  nullable=False)                    # Mã giảm giá
+    discount_type = db.Column(db.Enum('percentage', 'fixed', name='discount_type_enum'), nullable=False)
+    discount_value = db.Column(db.Numeric(10,2),  nullable=False)      #Giá trị giảm giá
+    min_order_value =db.Column(db.Numeric(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
+    start_date = db.Column(Date,nullable=False)              #Ngày bắt đầu
+    end_date = db.Column(Date,nullable=False) #                     -- Ngày kết thúc
+    usage_limit = db.Column(db.Integer)             # Số lần sử dụng tối đa
+    used_count = db.Column(db.Integer, default = 0)                        # Số lần đã sử dụng
+    status = db.Column(db.Enum('active', 'inactive', name='status_enum'), nullable=False, default='active')
+    customer_group = db.Column(db.VARCHAR(50))      # Nhóm khách hàng
+    #Ràng buộc
+    __table_args__=(
+        CheckConstraint('discount_value >= 0', name='chk_discount_value'),
+        CheckConstraint('min_order_value >= 0', name='chk_min_order_value'),
+    )
+    def get_id(self):
+        return str(self.coupon_id)
 class roleAdmins(db.Model, UserMixin):
     __tablename__='roleAdmins'
     role_id =db.Column(db.Integer, primary_key = True,  autoincrement=True) 
@@ -130,6 +138,6 @@ class CustomerGroups(db.Model, UserMixin):
     __tablename__='CustomerGroups'
     group_id =db.Column(db.Integer, primary_key = True,  autoincrement=True)# ID nhóm, tự động tăng
     group_description = db.Column(db.String(256))#,     -- Mô tả nhóm, có thể để trống
-    min_purchase=db.Column(db.Numberic(10,2), default=0)# Giá trị mua tối thiểu để vào nhóm, mặc định là 0
+    min_purchase=db.Column(db.Numeric(10,2), default=0)# Giá trị mua tối thiểu để vào nhóm, mặc định là 0
     def get_id(self):
         return str(self.group_id)
