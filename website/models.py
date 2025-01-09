@@ -1,7 +1,9 @@
 from . import db
 import uuid
 from flask_login import UserMixin
-from datetime import date
+from sqlalchemy import Date, Enum,CheckConstraint  
+import enum
+
 class Customer(db.Model,UserMixin):
     __tablename__ = 'Customer'
     
@@ -55,8 +57,8 @@ class Orders(db.Model,UserMixin):
     orders_status = db.Column(Enum('pending', 'shipped', 'completed', 'cancelled', name='order_status_enum'))
     orders_total = db.Column(db.Numeric(10,2), default = 0)
     shipping_fee = db.Column(db.Numeric(10,2), default = 0)
-    coupon_code=  db.Column(db.String(10), default = NULL)
-    couponship_code =db.Column(db.String(10), default = NULL)
+    coupon_code=  db.Column(db.String(10), default = 0)
+    couponship_code =db.Column(db.String(10), default = 0)
     def get_id(self):
         return str(self.orders_id)
      # Mối quan hệ nhiều-nhiều với Products thông qua bảng phụ
@@ -64,20 +66,19 @@ class Orders(db.Model,UserMixin):
 
 class OrderDetails(db.Model,UserMixin):
     __tablename__= 'OrderDetails'
-    orders_id = db.Column(db.String(10), db.ForeignKey('Orders.orders_id'))
-    prod_id = db.Column(db.Integer,db.ForeignKey('Products.prod_id'))
+    orders_id = db.Column(db.String(10), db.ForeignKey('Orders.orders_id'), primary_key = True)
+    prod_id = db.Column(db.Integer,db.ForeignKey('Products.prod_id'),primary_key = True)
     quantity = db.Column(db.Integer)
     price = db.Column(db.Numeric(10,2))
-    def get_id(self):
-        return str(self.order_detail_id)
-    product_dtl = db.relationship('Products', backref='order_details', lazy=True)
+
+    product_dtls = db.relationship('Products', backref='ord_dtls', lazy=True)
     
 class Coupon(db.Model,UserMixin ):
     __tablename__='Coupon'
     coupon_code = db.Column(db.VARCHAR(50),unique=True,  primary_key = True,  nullable=False)                    # Mã giảm giá
     discount_type = db.Column(db.Enum('percentage', 'fixed', name='discount_type_enum'), nullable=False)
     discount_value = db.Column(db.Numeric(10,2),  nullable=False)      #Giá trị giảm giá
-    min_order_value =db.Column(db.Numbric(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
+    min_order_value =db.Column(db.Numeric(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
     start_date = db.Column(Date,nullable=False)              #Ngày bắt đầu
     end_date = db.Column(Date,nullable=False) #                     -- Ngày kết thúc
     usage_limit = db.Column(db.Integer)             # Số lần sử dụng tối đa
@@ -104,11 +105,6 @@ class Coupon_Ship(db.Model,UserMixin ):
     used_count = db.Column(db.Integer, default = 0)                        # Số lần đã sử dụng
     status = db.Column(db.Enum('active', 'inactive', name='status_enum'), nullable=False, default='active')
     customer_group = db.Column(db.VARCHAR(50))      # Nhóm khách hàng
-    #Ràng buộc
-    __table_args__=(
-        CheckConstraint('discount_value >= 0', name='chk_discount_value'),
-        CheckConstraint('min_order_value >= 0', name='chk_min_order_value'),
-    )
     def get_id(self):
         return str(self.coupon_id)
 class roleAdmins(db.Model, UserMixin):
@@ -123,7 +119,7 @@ class Admins (db.Model, UserMixin):
     admin_name = db.Column(db.String(10), nullable = False)
     admin_username = db.Column(db.String(10), nullable = False, unique=True)
     admin_password = db.Column(db.String(100))
-    admin_id =db.Column(db.Integer, db.ForeignKey('roleAdmins.role_id'))#Khóa ngoại liên kết với vai trò
+    role_id =db.Column(db.Integer, db.ForeignKey('roleAdmins.role_id'))#Khóa ngoại liên kết với vai trò
     def get_id(self):
         return str(self.admin_id)
 class ProductImages (db.Model, UserMixin):

@@ -53,6 +53,7 @@ create table Orders(
 );
 
 CREATE TABLE OrderDetails (
+    ordersdtl_id int primary key,
     orders_id CHAR(10),
     prod_id INT,
     quantity INT,
@@ -73,10 +74,6 @@ CREATE TABLE Coupon (
     status VARCHAR(10) NOT NULL DEFAULT 'active', -- Trạng thái, thay ENUM bằng VARCHAR
     customer_group VARCHAR(50),                   -- Nhóm khách hàng
     -- Ràng buộc CHECK để giới hạn giá trị hợp lệ cho discount_type và status
-    CONSTRAINT chk_discount_type CHECK (discount_type IN ('percentage', 'fixed')),
-    CONSTRAINT chk_status CHECK (status IN ('active', 'inactive')),
-	CONSTRAINT chk_discount_value CHECK (discount_value >= 0),
-    CONSTRAINT chk_min_order_value CHECK (min_order_value >= 0)
 );
 
 CREATE TABLE Coupon_Ship (          -- Sử dụng IDENTITY để tự động tăng giá trị
@@ -276,16 +273,18 @@ BEGIN
 END;
 GO
 go
+delete
+from Customer
 INSERT INTO Customer (cus_name, cus_email, cus_phone, cus_username, cus_password)
 VALUES 
-('Văn An', 'vananhtran@gmail.com', '0987654321', 'nvana23', '123456'),
-('Thị Bình', 'thibinhn@gmail.com', '0912345678', 'ttb11', '987654'),
-('Minh Cường', 'minhcuong@gmail.com', '0938765432', 'lmc5', '246802'),
-('Thị Dương', 'thiduong@gmail.com', '0961234567', 'ptd34', '123456'),
-('Minh Tuấn', 'minhtuantran@gmail.com', '0923456789', 'dmt43', '123456'),
-('Khả Duy', 'trinhkhaduy@gmail.com', '0123456793', 'tkd42', '123456'),
-('Văn Thịnh', 'vanthinhnguyen@gmail.com', '0891234567', 'vtt423', '123456'),
-('Tuấn Phạm', 'phamminhtuan@gmail.com', '0909876543', 'pmt543', '123456');
+('Văn An', 'vananhtran@gmail.com', '0987654321', 'nvana23', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Thị Bình', 'thibinhn@gmail.com', '0912345678', 'ttb11', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Minh Cường', 'minhcuong@gmail.com', '0938765432', 'lmc5', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Thị Dương', 'thiduong@gmail.com', '0961234567', 'ptd34', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Minh Tuấn', 'minhtuantran@gmail.com', '0923456789', 'dmt43', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Khả Duy', 'trinhkhaduy@gmail.com', '0123456793', 'tkd42', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Văn Thịnh', 'vanthinhnguyen@gmail.com', '0891234567', 'vtt423', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'),
+('Tuấn Phạm', 'phamminhtuan@gmail.com', '0909876543', 'pmt543', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92');
 
 INSERT INTO Supplier (supply_name)
 VALUES 
@@ -321,9 +320,9 @@ VALUES
 
 INSERT INTO Admins (admin_name, admin_username, admin_password, role_id)
 VALUES
-('Gia Hân', 'adminA', '123456', 1),
-('Ngân Lê', 'adminB', '123456', 3),
-('Hải Mi', 'adminC', '123456', 2);
+('Gia Hân', 'adminA', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 1),
+('Ngân Lê', 'adminB', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 3),
+('Hải Mi', 'adminC', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92', 2);
 
 -- Thêm vào bảng Coupon
 INSERT INTO Coupon (coupon_code, discount_type, discount_value, min_order_value, start_date, end_date, status, customer_group)
