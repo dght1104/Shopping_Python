@@ -44,12 +44,11 @@ create table Orders(
 	cus_id int,
 	orders_status VARCHAR(20) CHECK (orders_status IN ('pending', 'shipped', 'completed','cancelled')),
 	orders_total DECIMAL(10, 2) DEFAULT 0,
-	 shipping_fee DECIMAL(10, 2) DEFAULT 0,
+	shipping_fee DECIMAL(10, 2) DEFAULT 0,
 	FOREIGN KEY (cus_id) REFERENCES Customer(cus_id)
 );
 
 CREATE TABLE OrderDetails (
-    order_detail_id INT PRIMARY KEY IDENTITY,
     orders_id CHAR(10),
     prod_id INT,
     quantity INT,
@@ -105,7 +104,7 @@ CREATE TABLE Admins (
 CREATE TABLE ProductImages (
     image_id INT PRIMARY KEY IDENTITY,  -- ID của hình ảnh
     prod_id INT,                        -- Khóa ngoại liên kết với bảng Products
-    image_path VARCHAR(512),            -- Đường dẫn hoặc URL đến hình ảnh
+  
     image_data VARBINARY(MAX),          -- Lưu trữ hình ảnh dưới dạng nhị phân (nếu cần)
     is_primary BIT DEFAULT 0,           -- Cột này xác định hình ảnh nào là hình ảnh chính của sản phẩm (0 = không phải, 1 = hình ảnh chính)
     FOREIGN KEY (prod_id) REFERENCES Products(prod_id)
