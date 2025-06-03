@@ -22,7 +22,7 @@ def create_app():
 
     from .view import views
     from .auth import auth
-    
+    from .admin import admin 
     from .models import Customer
     create_database(app)
 
@@ -36,6 +36,7 @@ def create_app():
 
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
+    app.register_blueprint(admin, url_prefix='/admin')
     return app
 
 def create_database(app):

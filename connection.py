@@ -7,7 +7,7 @@ app.secret_key = 'your_secret_key'
 
 # Thông tin cấu hình kết nối
 server = 'DGHT1104'  # Tên server
-database = 'db'  # Tên cơ sở dữ liệu
+database = 'db_shop'  # Tên cơ sở dữ liệu
 driver = 'ODBC Driver 17 for SQL Server'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (

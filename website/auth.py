@@ -30,7 +30,7 @@ def login():
             flash("Tên đăng nhập không tồn tại", category='error')
     signup_url = url_for('auth.signup')
     register_message = f'Bạn chưa có tài khoản, hãy <a href="{signup_url}">đăng ký ngay</a>!'
-    return render_template('login.html',user=user, register_message=register_message)
+    return render_template('auth/login.html',user=user, register_message=register_message)
     
 @auth.route('/logout')
 @login_required
@@ -61,4 +61,4 @@ def signup():
             flash("Tạo tài khoản thành công", category='success') 
             login_user(new_user, remember=True)
             return redirect(url_for('views.home'))
-    return render_template('signup.html',  user=current_user)
+    return render_template('auth/signup.html',  user=current_user)
