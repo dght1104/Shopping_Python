@@ -1,139 +1,130 @@
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 from . import db
-import uuid
-from flask_login import UserMixin
-from sqlalchemy import Date, Enum,CheckConstraint  
-import enum
 
-class Customer(db.Model,UserMixin):
+class Customer(db.Model):
     __tablename__ = 'Customer'
-    
     cus_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     cus_name = db.Column(db.String(256))
-    cus_email = db.Column(db.String(256))
+    cus_email = db.Column(db.String(256), unique=True)
     cus_phone = db.Column(db.String(10))
     cus_username = db.Column(db.String(50), unique=True)
-    cus_password = db.Column(db.String(100))
-    cus_group = db.Column(db.String(50), default='silver')
+    cus_password = db.Column(db.String(64))  # store hashed password
+    cus_group = db.Column(db.String(50), default='Silver')
+    is_verified = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
     total_spent = db.Column(db.Numeric(10, 2), default=0)
-
     def get_id(self):
+        # trả về id user dưới dạng string
         return str(self.cus_id)
-
-class Supplier(db.Model,UserMixin):
-    __tablename__= 'Supplier'
-    supply_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+class Supplier(db.Model):
+    __tablename__ = 'Supplier'
+    supply_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     supply_name = db.Column(db.String(256))
-    def get_id(self):
-        return str(self.supply_id)
 
-class Catalogue(db.Model,UserMixin):
-    __tablename__= 'Catalogue'
-    cat_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+class Catalogue(db.Model):
+    __tablename__ = 'Catalogue'
+    cat_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     cat_name = db.Column(db.String(256))
 
-
-class Products(db.Model,UserMixin):
-    __tablename__='Products'
-    prod_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
+class Products(db.Model):
+    __tablename__ = 'Products'
+    prod_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     prod_name = db.Column(db.String(256))
-    prod_received=db.Column(db.Integer) # Số lượng nhập
-    prod_stock=db.Column(db.Integer) # Số lượng tồn kho
-    prod_sold=db.Column(db.Integer) #Số lượng đã bán
+    prod_received = db.Column(db.Integer)
+    prod_sold = db.Column(db.Integer)
+    # prod_stock là trường tính toán: prod_received - prod_sold, bạn có thể làm property
     prod_price = db.Column(db.Numeric(10, 2))
-    prod_discount =db.Column(db.Numeric(5, 2))
-    cat_id=db.Column(db.Integer, db.ForeignKey('Catalogue.cat_id'))
-    supply_id=db.Column(db.Integer,  db.ForeignKey('Supplier.supply_id'))
-    prod_description=db.Column(db.Text)
+    prod_discount = db.Column(db.Numeric(5, 2))
+    cat_id = db.Column(db.Integer, db.ForeignKey('Catalogue.cat_id'))
+    supply_id = db.Column(db.Integer, db.ForeignKey('Supplier.supply_id'))
+    prod_description = db.Column(db.Text)
 
-    category = db.relationship('Catalogue', backref='products_cat', lazy=True) 
-     # Mối quan hệ với OrderDetails
-    order_details = db.relationship('OrderDetails', backref='product_dtl', lazy=True)
+    catalogue = db.relationship('Catalogue', backref='products')
+    supplier = db.relationship('Supplier', backref='products')
 
-class Orders(db.Model,UserMixin):
-    __tablename__='Orders'
-    orders_id = db.Column(db.String(10), primary_key = True) 
-    orders_date = db.Column(db.Date, default=db.func.now())
-    cus_id = db.Column(db.Integer,db.ForeignKey('Customer.cus_id'))
-    orders_status = db.Column(Enum('pending', 'shipped', 'completed', 'cancelled', name='order_status_enum'))
-    orders_total = db.Column(db.Numeric(10,2), default = 0)
-    shipping_fee = db.Column(db.Numeric(10,2), default = 0)
-    coupon_code=  db.Column(db.String(10), default = 0)
-    couponship_code =db.Column(db.String(10), default = 0)
-    def get_id(self):
-        return str(self.orders_id)
-     # Mối quan hệ nhiều-nhiều với Products thông qua bảng phụ
-    order_detail = db.relationship('OrderDetails', backref='order', uselist=False, lazy=True)
+    @property
+    def prod_stock(self):
+        return (self.prod_received or 0) - (self.prod_sold or 0)
 
-class OrderDetails(db.Model,UserMixin):
-    __tablename__= 'OrderDetails'
-    orders_id = db.Column(db.String(10), db.ForeignKey('Orders.orders_id'), primary_key = True)
-    prod_id = db.Column(db.Integer,db.ForeignKey('Products.prod_id'),primary_key = True)
+class Coupon(db.Model):
+    __tablename__ = 'Coupon'
+    coupon_code = db.Column(db.String(50), primary_key=True)
+    discount_type = db.Column(db.String(10))  # 'percentage' or 'fixed'
+    discount_value = db.Column(db.Numeric(10, 2))
+    min_order_value = db.Column(db.Numeric(10, 2))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    usage_limit = db.Column(db.Integer)
+    used_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(10), default='active')  # 'active' or 'inactive'
+    customer_group = db.Column(db.String(50))
+
+class CouponShip(db.Model):
+    __tablename__ = 'Coupon_Ship'
+    couponship_code = db.Column(db.String(50), primary_key=True)
+    discount_type = db.Column(db.String(10))
+    discount_value = db.Column(db.Numeric(10, 2))
+    min_order_value = db.Column(db.Numeric(10, 2))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    usage_limit = db.Column(db.Integer)
+    used_count = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(10), default='active')
+    customer_group = db.Column(db.String(50))
+
+class Orders(db.Model):
+    __tablename__ = 'Orders'
+    orders_id = db.Column(db.String(10), primary_key=True)  # char(10)
+    orders_date = db.Column(db.Date, default=datetime.utcnow)
+    cus_id = db.Column(db.Integer, db.ForeignKey('Customer.cus_id'))
+    orders_status = db.Column(db.String(20))  # pending, shipped, completed, cancelled
+    orders_total = db.Column(db.Numeric(10, 2), default=0)
+    shipping_fee = db.Column(db.Numeric(10, 2), default=0)
+    coupon_code = db.Column(db.String(50), db.ForeignKey('Coupon.coupon_code'))
+    couponship_code = db.Column(db.String(50), db.ForeignKey('Coupon_Ship.couponship_code'))
+
+    customer = db.relationship('Customer', backref='orders')
+    coupon = db.relationship('Coupon', backref='orders')
+    coupon_ship = db.relationship('CouponShip', backref='orders')
+    order_details = db.relationship('OrderDetails', backref='order', cascade="all, delete-orphan")
+
+class OrderDetails(db.Model):
+    __tablename__ = 'OrderDetails'
+    ordersdtl_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    orders_id = db.Column(db.String(10), db.ForeignKey('Orders.orders_id'))
+    prod_id = db.Column(db.Integer, db.ForeignKey('Products.prod_id'))
     quantity = db.Column(db.Integer)
-    price = db.Column(db.Numeric(10,2))
+    price = db.Column(db.Numeric(10, 2))
 
-    product_dtls = db.relationship('Products', backref='ord_dtls', lazy=True)
-    
-class Coupon(db.Model,UserMixin ):
-    __tablename__='Coupon'
-    coupon_code = db.Column(db.VARCHAR(50),unique=True,  primary_key = True,  nullable=False)                    # Mã giảm giá
-    discount_type = db.Column(db.Enum('percentage', 'fixed', name='discount_type_enum'), nullable=False)
-    discount_value = db.Column(db.Numeric(10,2),  nullable=False)      #Giá trị giảm giá
-    min_order_value =db.Column(db.Numeric(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
-    start_date = db.Column(Date,nullable=False)              #Ngày bắt đầu
-    end_date = db.Column(Date,nullable=False) #                     -- Ngày kết thúc
-    usage_limit = db.Column(db.Integer)             # Số lần sử dụng tối đa
-    used_count = db.Column(db.Integer, default = 0)                        # Số lần đã sử dụng
-    status = db.Column(db.Enum('active', 'inactive', name='status_enum'), nullable=False, default='active')
-    customer_group = db.Column(db.VARCHAR(50))      # Nhóm khách hàng
-    #Ràng buộc
-    __table_args__=(
-        CheckConstraint('discount_value >= 0', name='chk_discount_value'),
-        CheckConstraint('min_order_value >= 0', name='chk_min_order_value'),
-    )
-    def get_id(self):
-        return str(self.coupon_id)
+    product = db.relationship('Products', backref='order_details')
 
-class Coupon_Ship(db.Model,UserMixin ):
-    __tablename__='Coupon_Ship'
-    couponship_code = db.Column(db.VARCHAR(50),unique=True,  primary_key = True,  nullable=False)                    # Mã giảm giá
-    discount_type = db.Column(db.Enum('percentage', 'fixed', name='discount_type_enum'), nullable=False)
-    discount_value = db.Column(db.Numeric(10,2),  nullable=False)      #Giá trị giảm giá
-    min_order_value =db.Column(db.Numeric(10,2),  nullable=False)             # Giá trị đơn hàng tối thiểu
-    start_date = db.Column(Date,nullable=False)              #Ngày bắt đầu
-    end_date = db.Column(Date,nullable=False) #                     -- Ngày kết thúc
-    usage_limit = db.Column(db.Integer)             # Số lần sử dụng tối đa
-    used_count = db.Column(db.Integer, default = 0)                        # Số lần đã sử dụng
-    status = db.Column(db.Enum('active', 'inactive', name='status_enum'), nullable=False, default='active')
-    customer_group = db.Column(db.VARCHAR(50))      # Nhóm khách hàng
-    def get_id(self):
-        return str(self.coupon_id)
-class roleAdmins(db.Model, UserMixin):
-    __tablename__='roleAdmins'
-    role_id =db.Column(db.Integer, primary_key = True,  autoincrement=True) 
-    role_name = db.Column(db.String(10), nullable = False)
-    def get_id(self):
-        return str(self.role_id)
-class Admins (db.Model, UserMixin):
-    __tablename__='Admins'
-    admin_id =db.Column(db.Integer, primary_key = True,  autoincrement=True) 
-    admin_name = db.Column(db.String(10), nullable = False)
-    admin_username = db.Column(db.String(10), nullable = False, unique=True)
-    admin_password = db.Column(db.String(100))
-    role_id =db.Column(db.Integer, db.ForeignKey('roleAdmins.role_id'))#Khóa ngoại liên kết với vai trò
-    def get_id(self):
-        return str(self.admin_id)
-class ProductImages (db.Model, UserMixin):
-    __tablename__='ProductImages'
-    image_id =db.Column(db.Integer, primary_key = True,  autoincrement=True)   # ID của hình ảnh
-    prod_id =db.Column(db.Integer,db.ForeignKey('Products.prod_id'))                  #Khóa ngoại liên kết với bảng Products
-    image_path = db.Column(db.String(100))          # Đường dẫn hoặc URL đến hình ảnh
-    is_primary = db.Column(db.Boolean, default=False)   # Cột này xác định hình ảnh nào là hình ảnh chính của sản phẩm (false = không phải, true = hình ảnh chính)
-    def get_id(self):
-        return str(self.image_id)
-class CustomerGroups(db.Model, UserMixin):
-    __tablename__='CustomerGroups'
-    group_id =db.Column(db.Integer, primary_key = True,  autoincrement=True)# ID nhóm, tự động tăng
-    group_description = db.Column(db.String(256))#,     -- Mô tả nhóm, có thể để trống
-    min_purchase=db.Column(db.Numeric(10,2), default=0)# Giá trị mua tối thiểu để vào nhóm, mặc định là 0
-    def get_id(self):
-        return str(self.group_id)
+class RoleAdmins(db.Model):
+    __tablename__ = 'roleAdmins'
+    role_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    role_name = db.Column(db.String(50), unique=True, nullable=False)
+
+class Admins(db.Model):
+    __tablename__ = 'Admins'
+    admin_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    admin_name = db.Column(db.String(256), nullable=False)
+    admin_username = db.Column(db.String(50), unique=True, nullable=False)
+    admin_password = db.Column(db.String(64), nullable=False)  # hashed password
+    role_id = db.Column(db.Integer, db.ForeignKey('roleAdmins.role_id'))
+
+    role = db.relationship('RoleAdmins', backref='admins')
+
+class ProductImages(db.Model):
+    __tablename__ = 'ProductImages'
+    image_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    prod_id = db.Column(db.Integer, db.ForeignKey('Products.prod_id'))
+    image_data = db.Column(db.LargeBinary)
+    is_primary = db.Column(db.Boolean, default=False)
+
+    product = db.relationship('Products', backref='images')
+
+class CustomerGroups(db.Model):
+    __tablename__ = 'CustomerGroups'
+    group_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    group_description = db.Column(db.String(255))
+    min_purchase = db.Column(db.Numeric(10, 2), default=0)

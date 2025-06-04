@@ -1,5 +1,5 @@
 <header class="header_section">
-   <div class="container">
+   <div class="container_index">
       <nav class="navbar navbar-expand-lg custom_nav-container ">
          <a class="navbar-brand" href="index.html"><img width="250" src="images/logo.png" alt="#" /></a>
          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,8 +54,23 @@
                         </li>
                         <form class="form-inline">
                            <button class="btn  my-2 my-sm-0 nav_search-btn" type="submit">
-                           <i class="fa fa-search" aria-hidden="true"></i>
+                              <i class="fa fa-search" aria-hidden="true"></i>
                            </button>
+                           {% if current_user.is_authenticated %}
+                           <!-- Đã đăng nhập: Hiện icon user -->
+                           <a href="{{ url_for('views.profile') }}">
+                              <button class="btn my-2 my-sm-0 nav_search-btn" type="button">
+                                    <i class="fa fa-user" aria-hidden="true"></i>
+                              </button>
+                           </a>
+                        {% else %}
+                           <!-- Chưa đăng nhập: Hiện icon sign-in -->
+                           <a href="{{ url_for('auth.login') }}">
+                              <button class="btn my-2 my-sm-0 nav_search-btn" type="button">
+                                    <i class="fa fa-sign-in" aria-hidden="true"></i>
+                              </button>
+                           </a>
+                        {% endif %}
                         </form>
                      </ul>
                   </div>
